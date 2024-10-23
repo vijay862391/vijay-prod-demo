@@ -1,0 +1,643 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: odex-edo-consumer-v1
+  namespace: odex
+  labels:
+    app: odex
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      demo: ODeX-Edo-Consumer-V1
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        demo: ODeX-Edo-Consumer-V1
+      annotations:
+        kubectl.kubernetes.io/restartedAt: '2024-10-22T07:03:29Z'
+    spec:
+      volumes:
+        - name: kube-api-access
+          projected:
+            sources:
+              - configMap:
+                  name: kube-root-ca.crt
+              - serviceAccountToken:
+                  expirationSeconds: 3607
+                  path: token
+              - downwardAPI:
+                  items:
+                    - path: namespace
+                      fieldRef:
+                        apiVersion: v1
+                        fieldPath: metadata.namespace
+            defaultMode: 420
+        - name: secrets
+          projected:
+            sources:
+              - secret:
+                  name: odex-postgres-odex-c8dc12f0
+                  items:
+                    - key: spring.r2dbc.password
+                      path: spring.r2dbc.password
+            defaultMode: 420
+      containers:
+        - name: main
+          image: >-
+            228294767993.dkr.ecr.ap-south-1.amazonaws.com/odex-edo-consumer-v1-demo:latest
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          env:
+            - name: CLIENT_APP_HOST
+              value: https://demo.odexglobal.com
+            - name: AUTH_SERVER_HOST
+              value: https://demo.odexglobal.com/auth
+            - name: API_GATEWAY_HOST
+              value: https://demo.odexglobal.com/api
+            - name: SPRING_PROFILES_ACTIVE
+              value: demo
+          resources: {}
+          volumeMounts:
+            - name: kube-api-access
+              readOnly: true
+              mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+            - name: secrets
+              readOnly: true
+              mountPath: /etc/secrets
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 10
+            timeoutSeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 10
+            timeoutSeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+          startupProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 60
+            timeoutSeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          imagePullPolicy: Always
+          securityContext:
+            privileged: false
+            runAsNonRoot: false
+            readOnlyRootFilesystem: false
+            allowPrivilegeEscalation: false
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: false
+        fsGroupChangePolicy: Always
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: type
+                    operator: In
+                    values:
+                      - microservices
+      schedulerName: default-scheduler
+      setHostnameAsFQDN: false
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: odex-edo-consumer-v2
+  namespace: odex
+  labels:
+    app: odex
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      demo: ODeX-Edo-Consumer-V2
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        demo: ODeX-Edo-Consumer-V2
+      annotations:
+        kubectl.kubernetes.io/restartedAt: '2024-10-23T10:05:46Z'
+    spec:
+      volumes:
+        - name: kube-api-access
+          projected:
+            sources:
+              - configMap:
+                  name: kube-root-ca.crt
+              - serviceAccountToken:
+                  expirationSeconds: 3607
+                  path: token
+              - downwardAPI:
+                  items:
+                    - path: namespace
+                      fieldRef:
+                        apiVersion: v1
+                        fieldPath: metadata.namespace
+            defaultMode: 420
+        - name: secrets
+          projected:
+            sources:
+              - secret:
+                  name: odex-postgres-odex-c8dc12f0
+                  items:
+                    - key: spring.datasource.password
+                      path: spring.datasource.password
+            defaultMode: 420
+      containers:
+        - name: main
+          image: >-
+            228294767993.dkr.ecr.ap-south-1.amazonaws.com/odex-edo-consumer-v2-demo:latest
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          env:
+            - name: CLIENT_APP_HOST
+              value: https://demo.odexglobal.com
+            - name: AUTH_SERVER_HOST
+              value: https://demo.odexglobal.com/auth
+            - name: API_GATEWAY_HOST
+              value: https://demo.odexglobal.com/api
+            - name: SPRING_PROFILES_ACTIVE
+              value: demo
+          resources: {}
+          volumeMounts:
+            - name: kube-api-access
+              readOnly: true
+              mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+            - name: secrets
+              readOnly: true
+              mountPath: /etc/secrets
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 10
+            timeoutSeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 10
+            timeoutSeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+          startupProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 60
+            timeoutSeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          imagePullPolicy: Always
+          securityContext:
+            privileged: false
+            runAsNonRoot: false
+            readOnlyRootFilesystem: false
+            allowPrivilegeEscalation: false
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: false
+        fsGroupChangePolicy: Always
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: type
+                    operator: In
+                    values:
+                      - microservices
+      schedulerName: default-scheduler
+      setHostnameAsFQDN: false
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: odex-edo-rest-v1
+  namespace: odex
+  labels:
+    app: odex
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      demo: ODeX-Edo-Rest-V1
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        demo: ODeX-Edo-Rest-V1
+      annotations:
+        kubectl.kubernetes.io/restartedAt: '2024-10-23T10:05:38Z'
+    spec:
+      volumes:
+        - name: kube-api-access
+          projected:
+            sources:
+              - configMap:
+                  name: kube-root-ca.crt
+              - serviceAccountToken:
+                  expirationSeconds: 3607
+                  path: token
+              - downwardAPI:
+                  items:
+                    - path: namespace
+                      fieldRef:
+                        apiVersion: v1
+                        fieldPath: metadata.namespace
+            defaultMode: 420
+        - name: secrets
+          projected:
+            sources:
+              - secret:
+                  name: odex-postgres-odex-c8dc12f0
+                  items:
+                    - key: spring.r2dbc.password
+                      path: spring.r2dbc.password
+            defaultMode: 420
+      containers:
+        - name: main
+          image: >-
+            228294767993.dkr.ecr.ap-south-1.amazonaws.com/odex-edo-rest-v1-demo:latest
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          env:
+            - name: CLIENT_APP_HOST
+              value: https://demo.odexglobal.com
+            - name: AUTH_SERVER_HOST
+              value: https://demo.odexglobal.com/auth
+            - name: API_GATEWAY_HOST
+              value: https://demo.odexglobal.com/api
+            - name: SPRING_PROFILES_ACTIVE
+              value: demo
+          resources: {}
+          volumeMounts:
+            - name: kube-api-access
+              readOnly: true
+              mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+            - name: secrets
+              readOnly: true
+              mountPath: /etc/secrets
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 10
+            timeoutSeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 10
+            timeoutSeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+          startupProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 60
+            timeoutSeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          imagePullPolicy: Always
+          securityContext:
+            privileged: false
+            runAsNonRoot: false
+            readOnlyRootFilesystem: false
+            allowPrivilegeEscalation: false
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: false
+        fsGroupChangePolicy: Always
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: type
+                    operator: In
+                    values:
+                      - microservices
+      schedulerName: default-scheduler
+      setHostnameAsFQDN: false
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: odex-edo-rest-v2
+  namespace: odex
+  labels:
+    app: odex
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      demo: ODeX-Edo-Rest-V2
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        demo: ODeX-Edo-Rest-V2
+      annotations:
+        kubectl.kubernetes.io/restartedAt: '2024-10-23T10:21:57Z'
+    spec:
+      volumes:
+        - name: kube-api-access
+          projected:
+            sources:
+              - configMap:
+                  name: kube-root-ca.crt
+              - serviceAccountToken:
+                  expirationSeconds: 3607
+                  path: token
+              - downwardAPI:
+                  items:
+                    - path: namespace
+                      fieldRef:
+                        apiVersion: v1
+                        fieldPath: metadata.namespace
+            defaultMode: 420
+        - name: secrets
+          projected:
+            sources:
+              - secret:
+                  name: odex-postgres-odex-c8dc12f0
+                  items:
+                    - key: spring.datasource.password
+                      path: spring.datasource.password
+            defaultMode: 420
+      containers:
+        - name: main
+          image: >-
+            228294767993.dkr.ecr.ap-south-1.amazonaws.com/odex-edo-rest-v2-demo:latest
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          env:
+            - name: CLIENT_APP_HOST
+              value: https://demo.odexglobal.com
+            - name: AUTH_SERVER_HOST
+              value: https://demo.odexglobal.com/auth
+            - name: API_GATEWAY_HOST
+              value: https://demo.odexglobal.com/api
+            - name: SPRING_PROFILES_ACTIVE
+              value: demo
+          resources: {}
+          volumeMounts:
+            - name: kube-api-access
+              readOnly: true
+              mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+            - name: secrets
+              readOnly: true
+              mountPath: /etc/secrets
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 10
+            timeoutSeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 10
+            timeoutSeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+          startupProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 60
+            timeoutSeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          imagePullPolicy: Always
+          securityContext:
+            privileged: false
+            runAsNonRoot: false
+            readOnlyRootFilesystem: false
+            allowPrivilegeEscalation: false
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: false
+        fsGroupChangePolicy: Always
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: type
+                    operator: In
+                    values:
+                      - microservices
+      schedulerName: default-scheduler
+      setHostnameAsFQDN: false
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: odex-paymentgateway
+  namespace: odex
+  labels:
+    app: odex
+    k8slens-edit-resource-version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      demo: ODEX-Payment-gateway
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        demo: ODEX-Payment-gateway
+      annotations:
+        kubectl.kubernetes.io/restartedAt: '2024-10-23T10:24:14Z'
+    spec:
+      volumes:
+        - name: odex-postgres-odex-c8dc12f0
+          secret:
+            secretName: odex-postgres-odex-c8dc12f0
+            defaultMode: 420
+      containers:
+        - name: main
+          image: >-
+            228294767993.dkr.ecr.ap-south-1.amazonaws.com/odex-payment-gateway-demo:latest
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          env:
+            - name: CLIENT_APP_HOST
+              value: https://demo.odexglobal.com
+            - name: AUTH_SERVER_HOST
+              value: https://demo.odexglobal.com/auth
+            - name: API_GATEWAY_HOST
+              value: https://demo.odexglobal.com/api
+            - name: SPRING_PROFILES_ACTIVE
+              value: demo
+          resources: {}
+          volumeMounts:
+            - name: odex-postgres-odex-c8dc12f0
+              mountPath: /etc/secrets
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 10
+            timeoutSeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 10
+            timeoutSeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+          startupProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 60
+            timeoutSeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          imagePullPolicy: Always
+          securityContext:
+            privileged: false
+            runAsNonRoot: false
+            readOnlyRootFilesystem: false
+            allowPrivilegeEscalation: false
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      automountServiceAccountToken: true
+      securityContext:
+        runAsNonRoot: false
+        fsGroupChangePolicy: Always
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/os
+                    operator: In
+                    values:
+                      - linux
+      schedulerName: default-scheduler
+      setHostnameAsFQDN: false
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600
+---
